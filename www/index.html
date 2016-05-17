@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html ng-app="starter">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>speedgogo</title>
+
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/grid.css" rel="stylesheet">
+
+    <!--  ionicons  -->
+    <link rel="stylesheet" type="text/css" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- ionic/angularjs js -->
+    <script src="lib/ionic/js/ionic.bundle.js"></script>
+
+    <!-- cordova script (this will be a 404 during development) -->
+    <script src="lib/ngCordova/dist/ng-cordova.js"></script>
+    <script src="cordova.js"></script>
+
+    <!-- your app's js -->
+    <script src="js/app.js"></script>
+
+    <!---->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+    <!-- angularFire-->
+    <!-- AngularJS -->
+    <!--script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script-->
+    <!-- Firebase -->
+    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+    <!-- AngularFire -->
+    <script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+  
+  </head>
+  <body ng-app="starter">
+
+    <ion-nav-bar class="bar-assertive z-depth-1-half">
+      <ion-nav-back-button>
+      </ion-nav-back-button>
+    </ion-nav-bar>
+             
+    <ion-nav-view></ion-nav-view>
+
+    <script id="home.html" type="text/ng-template">
+      <ion-view view-title="speedgogo" hide-nav-bar="true">
+        <ion-content scroll="false">
+          <div id="map_canvas">
+
+            <div id="humberger"></div>
+            <div id="speedgogo-logo"></div>
+            <!-- now location -->
+            <div id="nowLocate" class="z-depth-1"></div> 
+
+            <!-- sideMenu sideMenuCtrl -->
+            <div id="side-menu" class="z-depth-2">
+              <div class="side-head">
+              {{uniqueData}}
+              </div>  
+              <ul>
+                <li ng-show="uniqueData" ng-click="mypage.show()">マイページ</li>
+                <li ng-click="login.show()">ログイン</li>
+                <li ng-click="account.show()">アカウント作成</li>
+                <!--li ng-click="explain.show()">How to Use speedgogo?</li-->
+              </ul>  
+            </div>
+
+            <!-- Modal Cover -->
+            <div id="modal-cover"></div>
+
+            <div id="pickupArea" style="width:90%; left:5%; position:absolute; top:60px;" class="z-depth-1" ng-hide="firstcheck.length">
+              <label class="item item-input" style="border:none; border-radius:3px;">
+                <i class="icon ion-search placeholder-icon"></i>
+                <input type="text" placeholder="Search" id="pickupInner" readonly="readonly" ng-click="inputbar.show()" ng-model="aModel.name" style="background:#fff; font-size:0.6rem;">
+              </label>
+            </div>
+            <div id="dropoffArea" style="width:90%; left:5%; position:absolute; top:60px;" class="z-depth-1" ng-show="firstcheck.length">
+              <label class="item item-input" style="border:none; border-radius:3px;">
+                <i class="icon ion-search placeholder-icon"></i>
+                <input type="text" placeholder="Search" id="dropoffInner" readonly="readonly" ng-click="inputbar.show()" style="background:#fff; font-size:0.6rem;">
+              </label>
+            </div>
+
+            <div id="centerPinpick" class="z-depth-1" ng-hide="firstcheck.length" style="position:absolute; bottom:50%; left:49.5%; width:1%; height:40px; background:#27ae60; border-radius:50px; z-index:19;"></div>
+
+            <div id="centerPickup" class="z-depth-1" ng-hide="firstcheck.length" style="width:50%; height:40px; position:absolute; bottom:52%; left:25%; background:#27ae60; border-radius:20px; color:#fff; text-align:center; line-height:40px; font-weight:100; z-index:20;" ng-click="pickup()">ピンをクリックで指定</div>
+
+            <div id="centerPindrop" class="z-depth-1" ng-show="firstcheck.length" style="position:absolute; bottom:50%; left:49.5%; width:1%; height:40px; background:#e98b39; border-radius:50px; z-index:19;"></div>
+
+            <div id="centerdropoff" class="z-depth-1" ng-show="firstcheck.length" style="width:50%; height:40px; position:absolute; bottom:52%; left:25%; background:#e98b39; border-radius:20px; color:#fff; text-align:center; line-height:40px; font-weight:100; z-index:20;" ng-click="dropoff()">ピンをクリックで指定</div>
+
+            <div id="pickupAction" class="z-depth-1" ng-hide="firstcheck.length" ng-click="donext()" style="width:90%; height:50px; position:absolute; bottom:10px; left:5%; background:#27ae60; padding:0; border-radius:4px; text-align:center; line-height:50px; color:#fff; display:none;">配達先を入力へ</div>
+
+            <div id="backBtn" class="z-depth-1" ng-click="doback()" ng-show="firstcheck.length"></div>
+
+            <!--a href="#/detail" id="dropoffAction" class="z-depth-1" ng-hide="!firstcheck.length" ng-click="detailactionsheet()" style="width:90%; height:50px; position:absolute; bottom:10px; left:5%; background:#e98b39; padding:0; border-radius:4px; text-align:center; line-height:50px; color:#fff; text-decoration:none; display:none;">詳細へ</a-->
+
+            <div id="dropoffAction" class="z-depth-1" ng-hide="!firstcheck.length" ng-click="detailactionsheet()" style="width:90%; height:50px; position:absolute; bottom:10px; left:5%; background:#e98b39; padding:0; border-radius:4px; text-align:center; line-height:50px; color:#fff; text-decoration:none; display:none;">詳細へ</div>
+
+            <!--div id="praviewAction" class="z-depth-1" ng-hide="!firstcheck.length" ng-click="preview()" style="width:90%; height:50px; position:absolute; bottom:70px; left:5%; background:#e98b39; padding:0; border-radius:4px; text-align:center; line-height:50px; color:#fff; text-decoration:none; display:none;">プレビュー</div-->
+
+            <!--div id="praviewBack" class="z-depth-1" ng-click="previewBack()" style="width:90%; height:50px; position:absolute; bottom:10px; left:5%; background:#e98b39; padding:0; border-radius:4px; text-align:center; line-height:50px; color:#fff; text-decoration:none; display:none;">戻る</div-->
+
+            <div id="praviewBack" ng-click="previewBack()" style="position:absolute; top:30px; left:3%; display:none; color:#387EF5; font-size:1.2rem;"><i class="ion-ios-arrow-back"></i>&nbsp;戻る</div>
+
+          </div>  
+        </ion-content>
+      </ion-view>
+    </script>
+
+    <script id="account.html" type="text/ng-template">
+      <ion-modal-view ng-controller="accountCtrl">
+        <ion-header-bar>
+          <h1 class="title" id="accountTitle">アカウント作成</h1>
+          <button class="button button-clear button-stable" ng-click="account.hide()">Cancel</button>
+        </ion-header-bar>
+        <ion-content>
+          <div class="list list-inset" id="accountInput">
+            <label class="item item-input">
+              <input type="text" placeholder="Email" id="uniqueId">
+            </label>
+            <label class="item item-input">
+              <input type="password" placeholder="Password" id="stringPassword">
+            </label>
+            <button class="button button-full button-positive" ng-click="checkId()">
+              Submit
+            </button>
+            <button class="button button-full button-positive" ng-click="nagahama()">
+              ナガハマユウキを作成
+            </button>
+          </div>
+        </ion-content>
+      </ion-modal-view>
+    </script>
+
+    <script id="login.html" type="text/ng-template">
+    　<ion-modal-view style="background-color: rgba(158,158,158,0.6); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);">
+        <ion-header-bar style="background:none; border:none;">
+          <h1 class="title" style="color:#fff;">ログイン</h1>
+          <button class="button button-clear button-stable" ng-click="login.hide()" style="color:#fff;">Cancel</button>
+        </ion-header-bar>
+        <ion-content style="padding:10px;">  
+          <div class="list list-inset" style="margin:0;">
+            <label class="item item-input original-border">
+              <input type="text" placeholder="Email">
+            </label>
+            <label class="item item-input">
+              <input type="password" placeholder="Password">
+            </label>
+          </div>
+          <button class="button button-block button-positive">
+            Submit
+          </button>
+        </ion-content>
+      </ion-modal-view>
+    </script>
+
+    <script id="inputbar.html" type="text/ng-template">
+      <ion-modal-view>
+        <div class="bar bar-header item-input-inset">
+          <label class="item-input-wrapper">
+            <i class="icon ion-ios-search placeholder-icon"></i>
+            <input type="search" placeholder="Search">
+          </label>
+          <button class="button button-clear" ng-click="inputbar.hide()">
+            Cancel
+          </button>
+        </div>
+      </ion-modal-view>
+    </script>
+
+    <!--script id="detail.html" type="text/ng-template">
+      <ion-view view-title="詳細入力">
+        <ion-nav-bar class="bar-energized">
+          <ion-nav-back-button ng-click="myGoBack()"></ion-nav-back-button>
+        </ion-nav-bar>
+        <ion-content padding="true" class="detaildiv" scroll="false">
+          <p style="margin-bottom:3px;" class="white">荷物の集荷場所及び配達先</p>
+            <div class="list list-inset">
+                <div class="item original-border">
+                  <p>荷物の集荷場所</p>{{ShareData.pickup}}
+                </div>
+                <div class="item">
+                  <p>荷物の配達先</p>{{ShareData.dropoff}}
+                </div></a>
+            </div>
+
+          <p style="margin-bottom:3px;" class="white">料金及び距離</p>
+            <div class="button-bar bar-light" style="margin-bottom:20px;">
+              <a class="button" style="line-height:normal; padding-top:10px; padding-bottom:10px; color:steelblue;"><span style="font-size:0.8rem; color:#999;">宅配距離</span><br>{{ShareData.distance}}</a>
+              <a class="button" style="line-height:normal; padding-top:10px; padding-bottom:10px; color:steelblue;"><span style="font-size:0.8rem; color:#999;">料金</span><br>{{ShareData.price}}</a>
+              <a class="button" style="line-height:normal; padding-top:10px; padding-bottom:10px; color:steelblue;"><span style="font-size:0.8rem; color:#999;">配達時間</span><br>{{ShareData.time}}</a>
+            </div>  
+
+          <p style="margin-bottom:3px;" class="white">荷物の配達時間</p>
+            <div class="list list-inset">
+                <div class="item original-border" id="pickupDate" ng-click="showDatePicker()">
+                  <p>集荷の日付</p>
+                </div>
+                <div class="item" id="pickupTime" ng-click="showTimePicker()">
+                  <p>宅配の日付</p>
+                </div>
+            </div>
+
+          <p style="margin-bottom:3px;" class="white">オプション</p>
+            <div class="list list-inset">
+                <div class="item" ng-click="option.show()">
+                 オプション
+                </div>
+            </div>
+
+            <div class="bar bar-footer bar-royal" ng-click="actionsheet()">
+              <div class="title footer-title">この内容で予約</div>
+            </div>
+        </ion-content>
+      </ion-view>
+    </script-->
+
+    <!--script id="option.html" type="text/ng-template">
+      <ion-modal-view ng-controller="optionCtrl" style="width:100%; height:50%; top:40%; left:0%; right:0; bottom:0%; padding-top:50px;">
+        <button class="button button-icon icon ion-ios-close-empty" ng-click="option.hide()" style="position:absolute; top:5px; right:10px;"></button>
+        {{text}}{{ShareData.pickup}}
+      </ion-modal-view>
+    </script-->
+
+    <script id="feed.html" type="text/ng-template">
+      <ion-view view-title="詳細入力">
+        <ion-content class="feedContent" ng-init="mapInit()">
+          
+          <div class="timeline">
+            <div class="pickupTimes">{{nowTimeCheck}}</div>
+            <div class="pickupTo"><span class="big bold">{{ShareData.time}}</span>&nbsp;<br>前後で配送</div>
+          </div>
+
+          <div class="contents">
+            <p class="bold">荷物の集荷場所</p>
+            <p class="small">{{nowTimeCheck}}&nbsp;前後にお荷物の集荷に伺います</p>
+            <p class="small"><span class="ion-ios-location-outline" style="color:#27ae60;"></span>&nbsp;{{ShareData.pickup}}</p>
+            <div class="contentsMap" id="mapField"><i class="ion-record" style="color:#27ae60;"></i>
+            </div>
+
+            <button class="button button-clear button-positive">{{ShareData.time}}</button>
+            <button class="button button-clear button-positive">{{ShareData.distance}}</button>
+            <button class="button button-clear button-positive">{{ShareData.price}}</button>
+
+            <div class="border"></div>            
+            <!--img src="http://freeiconbox.com/icon/256/31520.png" style="display:block; margin:auto;" width="30%"-->
+          </div>
+
+          <div class="timeline">  
+            <div class="dropoffTimes">{{nowTimeCheck}}</div>
+          </div>
+
+          <div class="contents">
+            <p class="bold">荷物の配達場所</p>
+            <p class="small"><span class="ion-ios-location-outline" style="color:#e98b39;"></span>&nbsp;{{ShareData.dropoff}}</p>
+            <div class="contentsMap" id="mapFieldsecond"><i class="ion-record" style="color:#e98b39;"></i>
+            </div>
+          </div>
+
+          <div class="illust">
+            <div class="circle" style="background:#27ae60;"></div>
+            <div class="long"></div>
+            <div class="circle" style="background:#e98b39;"></div>
+          </div>
+
+        </ion-content>
+        <button class="button button-block button-assertive actionButton z-depth-1" ng-click="actionsheet()">宅配依頼</button>
+      </ion-view>
+    </script>  
+
+    <script id="sendModal.html" type="text/ng-template">
+      <ion-modal-view>
+        <ion-header-bar>
+          <h1 class="title">宅配情報</h1>
+          <button class="button button-clear button-positive" ng-click="sendModal.hide()">完了</button>
+        </ion-header-bar>
+        <ion-content>
+          <div class="list card">
+            <div class="item item-avatar">
+              <img src="mcfly.jpg">
+              <h2>長浜佑樹&nbsp;様</h2>
+              <p>{{nowTimeCheck}}</p>
+            </div>
+
+            <div class="item item-body">
+              <!--div class="contentsMap" id="modalMap"-->
+              <p>荷物の集荷場所</p>
+              <p>{{ShareData.pickup}}</p>
+              <p>荷物の配達場所</p>
+              <p>{{ShareData.dropoff}}</p>
+              <p>
+                <a href="#" class="subdued">1 Like</a>
+                <a href="#" class="subdued">5 Comments</a>
+              </p>
+            </div>
+          </div>
+        </ion-content>
+      </ion-modal-view>
+    </script> 
+
+    <script id="mypage.html" type="text/ng-template">
+      <ion-modal-view>
+        <ion-header-bar>
+          <button class="button button-clear button-stable" ng-click="mypage.hide()">Cancel</button>
+          <h1 class="title">MyPage</h1>
+          <button class="button button-clear button-positive" ng-click="mypage.hide()">登録</button>
+        </ion-header-bar>
+        <ion-content>
+        </ion-content>
+      </ion-modal-view>
+    </script> 
+
+  
+
+   
+
+
+  <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+
+  </body>
+
+
+</html>

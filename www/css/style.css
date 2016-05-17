@@ -1,0 +1,170 @@
+/* Empty. Add your own CSS if you like */
+.scroll {
+    height: 100%;
+}
+
+#map_canvas {
+    height: 100%;
+    width: 100%;
+}
+/* top bar */
+.bar.bar-assertive {
+	color:#fff;
+	background:steelblue;
+	border-color:steelblue;
+}
+.button.button-light.button-clear {
+	color:#fff;
+}
+/* nav */
+#humberger {
+    position:absolute;
+    width:20px;
+    height:20px;
+    top:28px;
+    left:5%;
+    cursor:pointer;
+    background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/humberger-bar-green.svg");
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    z-index:1;
+}
+    #humberger.active {
+	    background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/humberger-bar-orange.svg") !important;
+    }
+#nowLocate {
+    position:absolute;
+    top:23px;
+    right:5%;
+    width:28px;
+    height:28px;
+    cursor:pointer;
+    border:1px solid #c3c3c3;
+    border-radius:100%;
+    background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/location.svg");
+    background-repeat:no-repeat;
+    background-size:100%;
+}
+    #nowLocate.active {
+        background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/location-orange.svg") !important;	
+    }
+#speedgogo-logo {
+    height:25px;
+    display:block;
+    margin:auto;
+    position:relative;
+    top:25px;
+    cursor:pointer;
+    background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/speedgogo-green.svg");
+    background-repeat:no-repeat;
+    background-position:50% 50%;
+}
+    #speedgogo-logo.active {
+    	background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/speedgogo-orange.svg") !important;
+    }    
+/* 戻る */
+#backBtn {
+	width:28px;
+    height:28px;
+    position:absolute;
+    border:1px solid #c3c3c3;
+    top:110px;
+    left:5%;
+    border-radius:100%;
+    background-image:url("http://cargogo.jp/speedgogo/newspeedgogoIMG/pickupback.svg");
+    background-repeat:no-repeat;
+    background-size:100%;
+}
+/* sideMenu */
+#side-menu {
+    width:70%;
+    height:100%;
+    z-index:30;
+    position:fixed;
+    top:0;
+    left:-70%;
+    background:#fff;
+}
+#side-menu .side-head {
+    width:100%;
+    height:200px;
+    border-bottom:1px solid #fafafa;
+}
+#side-menu a {
+     text-decoration:none;
+}
+#side-menu ul {
+    list-style-type:none;
+    padding:0;
+}
+#side-menu li {
+    padding:20px 0 20px 30px;
+    cursor:pointer;
+}
+#side-menu li:hover {
+    background:rgba(0,0,0,0.1);
+    -moz-transition-duration:0.5s;
+    -webkit-transition-duration:0.5s;
+    -o-transition-duration:0.5s;
+    -ms-transition-duration:0.5s;
+}
+/* Modal Cover */
+#modal-cover {
+    width:100%;
+    height:100%;
+    background-color: rgba(0,0,0,0.2);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:25;
+    display:none;
+}
+/* 詳細入力のページ */
+.bar .title {
+	font-weight:300;
+}
+.bar.bar-energized {
+	background:steelblue;
+	border:none;
+	color:#fff;
+}
+.detaildiv {
+	background:steelblue;
+	color:#fff;
+}
+.bar.bar-royal {
+	background:mediumaquamarine;
+	border:none;
+	color:#fff;
+}
+.bar.bar-royal .footer-title {
+	line-height:54px;
+}
+.bar.bar-royal.bar-footer {
+	background-image:none;
+}
+.bar-footer {
+	height:54px;
+}
+.item {
+	border-color:#fff;
+	font-size:14px;
+}
+.item p {
+	font-size:10px;
+}
+.original-border {
+	border:none;
+	border-bottom:1px solid #ddd;
+	margin-bottom:1px !important; 
+}
+.list-inset {
+	margin-top:0;
+}
+/* 料金及び距離,時間 */
+.bar-light .button {
+	border-top: none;
+    border-bottom: none;
+}
