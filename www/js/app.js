@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic','ngCordova','firebase'])
+angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -51,7 +51,15 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
     }
   });
 })
-.factory('ShareData', function() {
+.factory('ShareData', function () {
+    return {
+    };
+})
+.factory('storageData', function () {
+    return {
+    };
+})
+.factory('creditStorageData', function () {
     return {
     };
 })
@@ -63,35 +71,34 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
       templateUrl: 'home.html',
       controller: 'mapCtrl'
     })
-    /*.state('detail', {
+    .state('detail', {
       url: '/detail',
       templateUrl: 'detail.html',
       controller: 'detailCtrl'
-    })*/
-    .state('feed', {
-      url: '/feed',
-      templateUrl: 'feed.html',
-      controller: 'feedCtrl'
     })
-    /*.state('options', {
-      url: '/detail/options',
-      templateUrl: 'options.html'
-    })*/
   ;
 
   $urlRouterProvider.otherwise("/");
 
 })
-.controller('mapCtrl', function ($scope, ShareData, $ionicModal, $ionicLoading, $cordovaProgress, $cordovaActionSheet) {
-    
-    $scope.uniqueData = JSON.parse(localStorage.getItem('storageData'));
+.controller('mapCtrl', function ($scope, ShareData, $ionicModal, $ionicLoading, $cordovaProgress, $cordovaActionSheet, storageData, creditStorageData) {  
+
+    //localStorage.clear();
+    $scope.firstInit = function(){
+        storageData.data = JSON.parse(localStorage.getItem('localData'));
+        creditStorageData.data = JSON.parse(localStorage.getItem('localDataCredit'));
+        console.log(creditStorageData.data);
+        console.log(storageData.data);
+        $scope.uniqueData = storageData;
+    };
+
     //サイドメニュー
-    $("#humberger").on("touchend mouseup", function(){
+    $scope.sideMenuOpen = function(){
         $("#side-menu").animate({
             left: "0%"
         },300);
         $("#modal-cover").fadeIn(100);
-    });
+    };
 
     //サイドメニュー閉じる
     $("#modal-cover").on("touchstart mousedown", function(){
@@ -102,8 +109,7 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
     });
 
     //現在位置に移動「通常」
-    var nowLocate = $(document.getElementById("nowLocate"));
-    nowLocate.on("touchend mousedown", function(){
+    $scope.nowLocation = function(){
         var locateOption = {
             enableHighAccuracy: true      // Force GPS
         };
@@ -119,7 +125,7 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
         function onError(error_msg) {
             //alert("位置情報を取得できませんでした。");
         }
-    });
+    };
 
     $scope.pickup = function(){
         ProgressIndicator.showSimpleWithLabel(false, 'Loading...')
@@ -150,46 +156,22 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
     var pickupPosition;
     $scope.donext = function(){
         $scope.firstcheck = "checked";
-        $("#humberger, #nowLocate, #speedgogo-logo").addClass("active");
+        $("#speedgogo-logo").addClass("active");
         map.animateCamera({
             "target": pickupPosition,
             "zoom": 15,
             "duration": 500
         });
-        /*$("#centerPickup, #centerPinpick").fadeOut(0);
-        $("#pickupArea").animate({
-            left: "-100%"
-        },300);
-        //$("#pickupArea, #pickupAction").delay(300).fadeOut(0);
-        $("#dropoffAction, #centerdropoff, #dropoffArea, #centerPindrop, #backBtn").delay(300).fadeIn(0);
-        map.animateCamera({
-            "target": pickupPosition,
-            "zoom": 15,
-            "duration": 500
-        });*/
-
     };
 
     $scope.doback = function(){
         $scope.firstcheck = "";
-        $("#humberger, #nowLocate, #speedgogo-logo").removeClass("active");
+        $("#speedgogo-logo").removeClass("active");
         map.animateCamera({
             "target": pickupPosition,
             "zoom": 17,
             "duration": 500
         });
-        /*$("#dropoffAction, #centerdropoff, #dropoffArea, #centerPindrop, #backBtn").fadeOut(0);
-        $("#pickupArea").delay(300).animate({
-            left: "5%"
-        },300);
-        $("#centerPickup, #centerPinpick").delay(300).fadeIn(0);
-        map.animateCamera({
-            "target": pickupPosition,
-            "zoom": 17,
-            "duration": 500
-        });*/
-
-
     };
 
     $scope.dropoff = function(){
@@ -217,6 +199,11 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
         $("#dropoffAction").fadeIn();
     };
 
+    $scope.placeModal = function(){
+        $("#googlePlaceCover, .ion-google-place-container.modal").fadeIn(0).animate({
+            top: "0%"
+        },300);
+    };
 
     var option = {
         title: 'What do you want with this image?',
@@ -238,7 +225,7 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
                     ShareData.time = data.routes[0].legs[0].duration.text;
                     var distance_mater = data.routes[0].legs[0].distance.value;
                     ShareData.price = Math.round(distance_mater * 0.3) + "円";
-                    location.href = "#/feed";
+                    location.href = "#/detail";
                 },
                 error: function(data){
                     alert("計算できませんでした");
@@ -262,7 +249,7 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
 
     //経路のプレビュー
     $scope.preview = function(){
-        $("#humberger, #speedgogo-logo, #nowLocate, #centerdropoff, #centerPindrop, #backBtn, #dropoffAction, #dropoffArea").fadeOut();
+        $("#speedgogo-logo, #centerdropoff, #centerPindrop, #backBtn, #dropoffAction, #dropoffArea").fadeOut();
         $("#praviewBack").fadeIn();
         bounds = [
             new plugin.google.maps.LatLng(centerLat, centerLng),
@@ -325,13 +312,6 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
     $scope.login = modal;
   });
 
-  $ionicModal.fromTemplateUrl('inputbar.html', {
-    scope: $scope,
-    animation: 'slide-in-up'
-  }).then(function(modal) {
-    $scope.inputbar = modal;
-  });
-
   $ionicModal.fromTemplateUrl('mypage.html', {
     scope: $scope,
     animation: 'slide-in-up'
@@ -339,234 +319,172 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
     $scope.mypage = modal;
   });
 
+  $ionicModal.fromTemplateUrl('slidebox.html', {
+    scope: $scope,
+    animation: 'slide-in-up'
+  }).then(function(modal) {
+    $scope.slidebox = modal;
+  });
+
+  $ionicModal.fromTemplateUrl('credit.html', {
+    scope: $scope,
+    animation: 'slide-in-up'
+  }).then(function(modal) {
+    $scope.credit = modal;
+  });
+
   $scope.$on('modal.shown', function() {
+    $("#googlePlaceCover").fadeIn(0);
     $("#side-menu").animate({
         left: "-70%"
     },300);
     $("#modal-cover").fadeOut(100);
   });
 
+  $scope.$on('modal.hidden', function() {
+    $("#googlePlaceCover").fadeOut(0);
+  });
 
-})  
-/*.controller('detailCtrl', function ($scope, ShareData, $cordovaActionSheet, $ionicHistory, $ionicModal) {
 
-    //StatusBar.styleLightContent();
+})
+.controller("detailCtrl", function($scope, ShareData, $ionicModal, $ionicSlideBoxDelegate, $ionicHistory, $rootScope, storageData, creditStorageData){
+
     $scope.ShareData = ShareData;
+    $scope.detailUniqueData = storageData;
+    //$scope.creditStorageData = JSON.parse(localStorage.getItem('localDataCredit'));
+    $scope.creditData = creditStorageData;
+    $scope.mapInit = function(){
+        mapDrow(centerLat, centerLng);
+        //mapDrow(33.67812656,134.4601305);
+    };
+
+    function mapDrow(lat, lng){
+        //var myMapStyles = [{"featureType":"all","elementType":"labels.text.fill","stylers":[{"saturation":36},{"color":"#000000"},{"lightness":40}]},{"featureType":"all","elementType":"labels.text.stroke","stylers":[{"visibility":"on"},{"color":"#000000"},{"lightness":16}]},{"featureType":"all","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":17},{"weight":1.2}]},{"featureType":"administrative","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"landscape","elementType":"geometry.fill","stylers":[{"lightness":"6"}]},{"featureType":"landscape","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":21}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":29},{"weight":0.2}]},{"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":18}]},{"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":16}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":19}]},{"featureType":"transit","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}];
+        var myMapStyles = [{"featureType":"administrative","elementType":"geometry","stylers":[{"visibility":"simplified"}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"saturation":"-21"}]},{"featureType":"administrative","elementType":"labels.text.fill","stylers":[{"color":"#444444"}]},{"featureType":"landscape","elementType":"all","stylers":[{"color":"#f2f2f2"}]},{"featureType":"landscape.man_made","elementType":"all","stylers":[{"visibility":"off"},{"hue":"#00b2ff"}]},{"featureType":"landscape.natural.landcover","elementType":"labels.text.fill","stylers":[{"saturation":"66"},{"hue":"#00ff78"}]},{"featureType":"landscape.natural.terrain","elementType":"labels.text.fill","stylers":[{"saturation":"26"},{"hue":"#00ff3f"}]},{"featureType":"poi","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"all","stylers":[{"saturation":-100},{"lightness":45}]},{"featureType":"road.highway","elementType":"all","stylers":[{"visibility":"simplified"}]},{"featureType":"road.arterial","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"transit","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"water","elementType":"all","stylers":[{"color":"#28afe6"},{"visibility":"on"}]},{"featureType":"water","elementType":"geometry.fill","stylers":[{"hue":"#009bff"},{"visibility":"on"},{"saturation":"20"},{"lightness":"79"},{"weight":"4.72"}]}];
+        var pickuplatlng = new google.maps.LatLng(lat, lng);
+        var option = {
+            zoom : 15,
+            center : pickuplatlng,
+            mapTypeId : google.maps.MapTypeId.ROADMAP,
+            scrollwheel: false,
+            disableDoubleClickZoom: true,
+            draggable: false,
+            zoomControl: false,
+            mapTypeControl: false,
+            scaleControl: false,
+            streetViewControl: false,
+            rotateControl: false,
+            styles: myMapStyles
+        };
+        detailMaps = new google.maps.Map(document.getElementById("onMaps"), option);
+    }
+
+    $scope.slideNum = function(num){
+        $ionicSlideBoxDelegate.slide(num);
+        checkTab(num);
+    };
+
+    $scope.slideHasChanged = function(index) {
+        checkTab(index);
+    };
+
+
+    function checkTab(n){
+        if(n == 0){
+            $("#tab0").addClass("active");
+            $("#tab1,#tab2").removeClass("active");
+        } else if (n == 1){
+            $("#tab1").addClass("active");
+            $("#tab0,#tab2").removeClass("active");
+        } else {
+            $("#tab2").addClass("active");
+            $("#tab0,#tab1").removeClass("active");
+        }
+    }
 
     $scope.myGoBack = function() {
         $ionicHistory.goBack();
-        //StatusBar.styleDefault();
     };
 
-    var option = {
-        title: 'この内容で予約をしますか?',
-        buttonLabels: ['宅配依頼'],
-        addCancelButtonWithLabel: 'Cancel',
-        androidEnableCancelButton : true,
-        winphoneEnableCancelButton : true
-        //addDestructiveButtonWithLabel : 'Delete it'
-    };
-
-      
-    $scope.actionsheet = function(){
-        $cordovaActionSheet.show(option).then(function(btnIndex) {
-            var index = btnIndex;
-        });
-    };
-
-  $ionicModal.fromTemplateUrl('option.html', {
+  $ionicModal.fromTemplateUrl('credit.html', {
     scope: $scope,
     animation: 'slide-in-up'
   }).then(function(modal) {
-    $scope.option = modal;
+    $scope.credit = modal;
   });
 
-    $scope.showDatePicker = function(){
-        var options = {
-            date: new Date(),
-            mode: "date",
-            minDate: new Date() - 10000,
-            doneButtonLabel: "決定",
-            okText: "決定",
-            locale: "ja",
-            clearButton: true
-        };
-        function onSuccess(date) {
-            document.getElementById("pickupDate").innerHTML = date.getMonth() + 1 + "月" + date.getDate() + "日";
-            ShareData.pickupDate = date;
-        }
-        function onError(error) { // Android only
-            alert('Error' + error);
-            $scope.pickupDate = "";
-        }
-        datePicker.show(options, onSuccess, onError);
-    };
+  $scope.$on('modal.shown', function() {
+    $("#googlePlaceCovers").fadeIn(0);
+  });
 
-    $scope.showTimePicker = function(){
-        var options = {
-            date: new Date(),
-            mode: "time",
-            doneButtonLabel: "決定",
-            okText: "決定",
-            minuteInterval: 10,
-            locale: "ja",
-            clearButton: true
-        };
-        function onSuccess(date) {
-            document.getElementById("pickupTime").innerHTML = date.getHours() + "時" + date.getMinutes() + "分";
-            ShareData.pickupTime = date;
-        }
-        function onError(error) { // Android only
-            alert('Error' + error);
-            $scope.pickupTime = "";
-        }
-        datePicker.show(options, onSuccess, onError);
-    };
-    
-
-  
-
-    
-})
-.controller('optionCtrl', function($scope){
-    $scope.text = "テスト";
-})*/
-.controller('feedCtrl', function($scope, ShareData, $rootScope, $cordovaProgress, $cordovaActionSheet, $ionicModal, $firebaseArray){
-
-    var ref = new Firebase("https://fkhfaejfilejifencdjsjhfe.firebaseio.com");
-    $scope.reserveData = $firebaseArray(ref);
-
-    var pickupmapDiv = "mapField";
-    var dropoffmapDiv = "mapFieldsecond";
-    var modalMap = "modalMap";
-    
-    $scope.mapInit = function() {
-
-        $scope.onmap = function(locate, area){
-            $.ajax({
-                url: "https://maps.googleapis.com/maps/api/geocode/json?address=" + locate + "&sensor=false",
-                data: {name: "long_name"},
-                datatype: "json",
-                    success: function(data){
-                        var dataArray = data.results;
-                        geolocate = dataArray[0].geometry.location;
-                        var option = {
-                            zoom : 15,
-                            center : new google.maps.LatLng(geolocate.lat, geolocate.lng),
-                            mapTypeId : google.maps.MapTypeId.ROADMAP,
-                            scrollwheel: false,
-                            disableDoubleClickZoom: true,
-                            draggable: false
-                        };
-                        //地図本体描画
-                        var pickupLongMap = new google.maps.Map(document.getElementById(area), option);
-                    },
-                    error: function(data){
-                        alert("住所の読み込みに失敗しました。");
-                    }
-            });
-        };
-        //ProgressIndicator.showDeterminate(false, 10000)
-        //$scope.nowTime = new Date();
-        var hours,minutes,ampm;
-        function AmPmChecker(date) {
-            hours = date.getHours();
-            minutes = date.getMinutes();
-            ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            var strTime = hours + ':' + minutes + ' ' + ampm;
-            return strTime;
-        }
-        $scope.nowTimeCheck = AmPmChecker(new Date());
-        $scope.ShareData = ShareData;
-        $scope.onmap(pickupAddress, pickupmapDiv);
-        $scope.onmap(dropoffAddress, dropoffmapDiv);
-    
-    };
-
-    var option = {
-        title: 'この内容で予約をしますか?',
-        buttonLabels: ['宅配依頼'],
-        addCancelButtonWithLabel: 'Cancel',
-        androidEnableCancelButton : true,
-        winphoneEnableCancelButton : true
-        //addDestructiveButtonWithLabel : 'Delete it'
-    }; 
-    $scope.actionsheet = function(){
-        $cordovaActionSheet.show(option).then(function(btnIndex) {
-            var index = btnIndex;
-            if(index == 1){
-                $scope.addMessage();
-            } else {
-            }
-        });
-    };
-
-
-    $scope.addMessage = function() {
-        $scope.reserveData.$add({
-            from: {
-                from_name: "長浜",
-                from_address: ShareData.pickup,
-            },
-            to: {
-                to_name: "久野",
-                to_address: dropoffAddress,
-            },
-            info: {
-                distance: ShareData.distance,
-                price: ShareData.price,
-                time: ShareData.time,
-                date: new Date().getTime(),
-                date_real: new Date(new Date().getTime()).toLocaleString()
-            },
-            check: {
-                flag: "one"
-            }
-        });
-        $cordovaProgress.showDeterminateWithLabel(true, 50000, "宅配依頼中")
-        setTimeout(success, 6000);
-        setTimeout(successClose, 8000);
-        function success(){
-            $cordovaProgress.showSuccess(true, "Success!")
-            setTimeout(sendModal,1000);
-            function sendModal(){
-                $scope.sendModal.show();
-                $scope.onmap(pickupAddress, modalMap);
-            }
-        }
-        function successClose(){
-            $cordovaProgress.hide()
-        }
-    };
-
-      $ionicModal.fromTemplateUrl('sendModal.html', {
-        scope: $scope,
-        animation: 'slide-in-up'
-      }).then(function(modal) {
-        $scope.sendModal = modal;
-      });
+  $scope.$on('modal.hidden', function() {
+    $("#googlePlaceCovers").fadeOut(0);
+  });
 
     $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
-        if(toState.templateUrl == "feed.html"){
-            $scope.mapInit();
+        if(toState.templateUrl == "detail.html"){
+            detailMaps.panTo(new google.maps.LatLng(34.6784656,135.4601305));
         }
     });
 
 
 })
-.controller('accountCtrl', function($scope, ShareData, $ionicModal){
+.controller("creditCtrl", function($scope, creditStorageData){
+
+    $scope.creditData = creditStorageData;
+
+    $scope.$watch('credit.creditNumber', function() {
+        var creditNumberValue = document.getElementById("creditNumber").value;
+        if(creditNumberValue.length == 4 || creditNumberValue.length == 9 || creditNumberValue.length == 14){
+            document.getElementById("creditNumber").value = creditNumberValue + " ";
+        } else if(creditNumberValue.length == 19){
+            document.getElementById("creditName").focus();
+        }
+    });
+
+    $scope.creditCheck = function(status){
+        $scope.credit.hide()
+        if(status == "1"){
+            $scope.credit.creditNumber = "";
+            $scope.credit.creditName = "";
+            $scope.credit.deadline = "";
+            $scope.credit.creditCVV = "";
+        } else if(status == "2"){
+            $scope.credit.check = "checked";
+            $scope.credit.creditNumber = "";
+            $scope.credit.creditName = "";
+            $scope.credit.deadline = "";
+            $scope.credit.creditCVV = "";
+            document.getElementById("creditNumber").value = "";
+            document.getElementById("creditName").value = "";
+            document.getElementById("deadline").value = "";
+            document.getElementById("creditCVV").value = "";
+            var localCreditDatas = {
+              creditNum: $scope.credit.creditNumber,
+              creditName: $scope.credit.creditName,
+              creditLine: $scope.credit.deadline,
+              creditCVV: $scope.credit.cvv
+            };
+            localStorage.setItem('localDataCredit', JSON.stringify(localCreditDatas));
+            $scope.firstInit();
+        }
+    };
+
+    $scope.reCredit = function(){
+        console.log("re");
+    };
+
+    $scope.deleteCredit = function(){
+        localStorage.removeItem('localDataCredit');
+    };
+
+})
+.controller('accountCtrl', function($scope, ShareData, $ionicModal, storageData){
 
     $scope.checkId = function(){
         var uniqueId = document.getElementById("uniqueId").value;
         var stringPassword = document.getElementById("stringPassword").value;    
-        /*if(uniqueId == "" || stringPassword == ""){
-            console.log("j");
-        } else {
-            console.log("d");
-        }*/
+
         $.ajax({
             url: 'http://160.16.206.129:3000/users',
             type: 'POST',
@@ -615,30 +533,104 @@ angular.module('starter', ['ionic','ngCordova','firebase'])
 
         $scope.lust = function(){
             $.ajax({
-                url: 'http://160.16.206.129:3000/users' + '/' + tokenId + '?access_token=' + accessToken,
-                type: 'GET',
+                url: "http://160.16.206.129:3000/sessions.json",
+                type: 'POST',
+                headers: {
+                    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
                 dataType: 'json',
+                data: {
+                    email: uniqueId,
+                    password: stringPassword
+                },
                 success: function(responce){
-                    $scope.mypage.show();
-                    $scope.account.hide();
                     console.log(responce);
+                    var localDatas = {
+                      email: responce.email
+                    };
+                    localStorage.setItem('localData', JSON.stringify(localDatas));
+                    $scope.account.hide();
+                    $scope.mypage.show();
+                    $scope.firstInit();
                 },
                 error: function(responce){
                     console.log("error");
                 }
-                });
-            };
+            });
         };
+    };
+})
+.controller("loginCtrl", function($scope){
+    $scope.login = function(){
+        $.ajax({
+            url: "http://160.16.206.129:3000/sessions.json",
+            type: 'POST',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            dataType: 'json',
+            data: {
+                email: "yuuki4104453@yahoo.co.jps",
+                password: "yms8413555"
+            },
+            success: function(responce){
+                console.log(responce);
+                var localDatas = {
+                  email: responce.email
+                };
+                localStorage.setItem('localData', JSON.stringify(localDatas));
+                $scope.firstInit();
+            },
+            error: function(responce){
+                console.log("error");
+            }
+        });
+    };
+})
+.controller("mypageCtrl", function($scope, storageData){
 
-    $scope.nagahama = function(){
-        var storageData = {
-          email: 'a',
-          name: 'b',
-          address: 'c'
-        };
-        localStorage.setItem('storageData', JSON.stringify(storageData));
-        //localData.data = JSON.parse(localStorage.getItem('storageData'));
-    };    
+    $scope.thisUniqueData = storageData;
+
+})
+.controller("slideboxCtrl", function($scope, $ionicSlideBoxDelegate){
+    $scope.next = function(){
+        $ionicSlideBoxDelegate.next();
+    };
+
+    $scope.slideHasChanged = function(index) {
+        $scope.slideIndex = index;
+    };
+
+})
+.controller("logoutCtrl", function($scope){
+    $scope.logout = function(){
+        $.ajax({
+            url: "http://160.16.206.129:3000/sessions.json",
+            type: 'DELETE',
+            headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+            },
+            dataType: 'json',
+            data: {
+                email: "yuuki4104453@yahoo.co.jps",
+                password: "yms8413555"
+            },
+            success: function(responce){
+                console.log("success");
+                $scope.login.show()
+            }
+            //error: function(responce){
+            //    console.log("error");
+                //localStorage.clear();
+                //$scope.firstInit();
+            //    $("#side-menu").animate({
+            //        left: "-70%"
+            //    },300);
+            //    $("#modal-cover").fadeOut(100);
+            //}
+        });
+    };
 })
 ;
+
 
