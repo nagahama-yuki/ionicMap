@@ -25,14 +25,19 @@
     <!-- cordova script (this will be a 404 during development) -->
     <script src="lib/ngCordova/dist/ng-cordova.js"></script>
     <script src="cordova.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
 
     <!-- your app's js -->
     <script src="js/app.js"></script>
     <script src="js/google-place.js"></script>
     <script src="js/place-mapMove.js"></script>
 
-    <!---->
-    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+    <!-- ngMap -->
+    <script src="lib/ngmap/build/scripts/ng-map.min.js"></script>
+    <!-- v3 map -->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js"></script>
 
     <!-- angularFire-->
     <!-- AngularJS -->
@@ -61,16 +66,30 @@
 
             <!-- sideMenu sideMenuCtrl -->
             <div id="side-menu" class="z-depth-2">
-              <div class="side-head"></div>  
-              <ul>
-                <li ng-show="uniqueData.data.email" ng-click="mypage.show()">マイページ</li>
-                <li ng-show="uniqueData.data.email">ドライバー登録</li>
-                <li ng-click="slidebox.show()">What is speedgogo?</li>
-                <li ng-hide="uniqueData.data.email" ng-click="login.show()">ログイン</li>
-                <li ng-hide="uniqueData.data.email" ng-click="account.show()">アカウント作成</li>
-                <li ng-show="uniqueData.data.email" ng-click="credit.show()">クレジットカード</li>
-                <li ng-show="uniqueData.data.email" ng-controller="logoutCtrl" ng-click="logout()">ログアウト</li>
-              </ul>  
+              <div class="side-head">
+                <p align="center" ng-show="uniqueData.data.email">こんにちは!<br>{{uniqueData.data.username + "さん"}}</p>
+              </div> 
+                <ion-item class="item-icon-left original" ng-show="uniqueData.data.email" ng-click="mypage.show()">
+                  <i class="icon ion-information-circled"></i>マイページ
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-show="uniqueData.data.email">
+                  <i class="icon ion-android-car"></i>ドライバー登録
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-click="slidebox.show()">
+                  <i class="icon ion-android-bulb"></i>What is speedgogo?
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-hide="uniqueData.data.email" ng-click="login.show()">
+                  <i class="icon ion-android-open"></i>ログイン
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-hide="uniqueData.data.email" ng-click="account.show()">
+                  <i class="icon ion-android-person-add"></i>アカウント作成
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-show="uniqueData.data.email" ng-click="credit.show()">
+                  <i class="icon ion-card"></i>クレジットカード
+                </ion-item>
+                <ion-item class="item-icon-left original" ng-show="uniqueData.data.email" ng-controller="logoutCtrl" ng-click="logout()">
+                  <i class="icon ion-android-exit"></i>ログアウト
+                </ion-item>   
             </div>
 
             <!-- Modal Cover -->
@@ -78,6 +97,11 @@
             
             <!-- Google Place bug build -->
             <div id="googlePlaceCover"></div>
+
+            <!-- first app explain -->
+            <div id="first-ex" ng-hide="checkExplain.checkEX" ng-click="exhide()">
+              <p align="center">ようこそspeedgogoへ</p>
+            </div>
 
             <div id="pickupArea" class="mainInput z-depth-1" ng-hide="firstcheck.length">
               <div class="box menuBtn humbergers h-pickup" ng-click="sideMenuOpen()">
@@ -127,10 +151,10 @@
         <ion-content ng-controller="accountCtrl">
           <div class="list list-inset">
             <label class="item item-input">
-              <input type="text" placeholder="Email" id="uniqueId">
+              <input type="text" pattern="^[0-9A-Za-z | ]+$" placeholder="Email" id="uniqueId">
             </label>
             <label class="item item-input">
-              <input type="password" placeholder="Password" id="stringPassword">
+              <input type="password" pattern="^[0-9A-Za-z | ]+$" placeholder="Password" id="stringPassword">
             </label>
             <button class="button button-full button-positive" ng-click="checkId()">
               Submit
@@ -141,37 +165,36 @@
     </script>
 
     <script id="login.html" type="text/ng-template">
-    　<ion-modal-view style="background-color: rgba(158,158,158,0.6); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);">
+    　<ion-modal-view style="background-color: rgba(158,158,158,0.6); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);" ng-controller="loginCtrl">
         <ion-header-bar style="background:none; border:none;">
           <h1 class="title" style="color:#fff;">ログイン</h1>
           <button class="button button-clear button-stable" ng-click="login.hide()" style="color:#fff;">Cancel</button>
         </ion-header-bar>
-        <ion-content style="padding:10px;" ng-controller="loginCtrl">  
+        <ion-content style="padding:10px;">  
           <div class="list list-inset" style="margin:0;">
             <label class="item item-input original-border">
-              <input type="text" placeholder="Email">
+              <input type="text" pattern="^[0-9A-Za-z | ]+$" id="logID" placeholder="Email">
             </label>
             <label class="item item-input">
-              <input type="password" placeholder="Password">
+              <input type="password" pattern="^[0-9A-Za-z | ]+$" id="logPass" placeholder="Password">
             </label>
           </div>
-          <button class="button button-block button-positive" ng-click="login()">
+          <button class="button button-block button-positive" ng-click="logins()">
             Submit
           </button>
+          <p align="center" ng-hide="!loginErrMsg.length">メールアドレスまたはパスワードが異なります</p>
         </ion-content>
       </ion-modal-view>
     </script>
 
     <script id="detail.html" type="text/ng-template">
       <ion-view view-title="詳細入力" hide-nav-bar="true">
-        <div id="onMaps">
-        </div>
-
         <!-- Google Place bug build -->
         <div id="googlePlaceCovers"></div>
         <div class="bar bar-header bar-positive" style="border:none; background:steelblue;">
           <button class="button button-icon icon ion-android-arrow-back" ng-click="myGoBack()"></button>
           <h1 class="title">詳細入力</h1>
+          <!--button class="button button-icon icon ion-android-more-vertical"></button-->
         </div>
         <div class="tabs-striped tabs-top tabs-background-positive tabs-color-light">
           <div class="tabs tabs-icon-left z-depth-1" style="background:steelblue; border:none;">
@@ -189,84 +212,147 @@
             </a>
           </div>
         </div>
-        <ion-content ng-init="mapInit()"> 
+        <button class="z-depth-1 finishBtn" ng-controller="sendCtrl" ng-click="sends()">
+          <i class=" icon ion-android-send"></i>
+        </button>
+
+        <ion-content style="background:#EEEEEE;"> 
           <ion-slide-box on-slide-changed="slideHasChanged($index)" class="detailOriginal" style="padding-top:120px;">
             <ion-slide>
-              <div class="card z-depth-2" style="background:steelblue;">
+
+              <div class="card z-depth-1">
                 <div class="direction">
                   <div class="post">
-                    <span style="width:12px; height:12px; border-radius:100%; display:block; background:#27ae60; position:relative; margin:auto; top:14px;">
-                    <span style="width:1px; height:16px; display:block; background:#fff; margin:auto; position:relative; top:18px;"></span>
-                    <span style="width:12px; height:12px; border-radius:100%; display:block; background:#e98b39; position:relative; margin:auto; top:24px;">
+                    <span class="z-depth-1-half" style="width:16px; height:16px; border-radius:100%; display:block; background:darkseagreen; opacity:0.5; position:relative; margin:auto; top:29.5px;">
+                      <span style="width:70%; height:70%; display:block; background:green; border-radius:100%; position:relative; top:15%; left:15%;"></span>
+                    </span>
+                    <span style="width:2px; height:49px; display:block; background:#F8F8F8; margin:auto; position:relative; top:34.5px;"></span>
+                    <span class="z-depth-1-half" style="width:16px; height:16px; border-radius:100%; display:block; background:#e98b39; opacity:0.5; position:relative; margin:auto; top:39.5px;">
+                      <span style="width:70%; height:70%; display:block; background:orangered; border-radius:100%; position:relative; top:15%; left:15%;"></span>
+                    </span>
                   </div>
-                  <div class="origins original-border">{{ShareData.pickup}}</div>
-                  <div class="origins">{{ShareData.dropoff}}</div>
+                  <div class="origins original-border">
+                    集荷場所<br>
+                    <span class="big"><i class="icon ion-location" style="color:#27ae60;"></i>&nbsp;{{ShareData.pickup}}</span>
+                  </div>
+                  <div class="origins">
+                    配達先<br>
+                    <span class="big"><i class="icon ion-location" style="color:#e98b39;"></i>&nbsp;{{ShareData.dropoff}}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="list card">
-                <div class="item item-avatar">
-                  <div id="pickMap" class="z-depth-1">
+
+              <div class="card z-depth-1">
+                <div class="item item-divider" style="background:#27ae60; min-height:4px; padding:0;"></div>
+                <div class="item item-text-wrap" style="padding:0;">
+                  <!--span class="z-depth-1-half" style="width:16px; height:16px; border-radius:100%; display:block; background:darkseagreen; position:absolute; left:48%; top:42px; z-index:100; opacity:0.5;">
+                    <span style="width:60%; height:60%; display:block; background:green; border-radius:100%; position:relative; top:20%; left:20%; z-index:101;"></span>
+                  </span-->
+                  <div map-lazy-load="https://maps.google.com/maps/api/js">
+                    <ng-map center="{{ShareData.pickupLat}}, {{ShareData.pickupLng}}" zoom="18" default-style="false" draggable="false" disable-double-click-zoom="true" scrollwheel="false" style="height:100px;">
+                      <custom-marker position="{{ShareData.pickupLat}}, {{ShareData.pickupLng}}">
+                        <img src="img/to-start-marker.png" height="50px" style="margin:auto; display:block; position:relative; margin-bottom:-10px;">
+                      </custom-marker>
+                    </ng-map>
                   </div>
-                  <h2>荷物の集荷場所</h2>
-                  <p>{{ShareData.pickup}}</p>
-                </div>
-                <div class="item item-body">
-                  <p>
-                    This is a "Facebook" styled Card. The header is created from a Thumbnail List item,
-                  </p>
-                  <p>
-                    <a href="#" class="subdued">1 Like</a>
-                    <a href="#" class="subdued">5 Comments</a>
-                  </p>
                 </div>
               </div>
-              <div class="list card">
-                <div class="item item-avatar">
-                  <div id="dropMap" class="z-depth-1">
+
+              <div class="card z-depth-1">
+                <div class="item item-divider" style="background:#e98b39; min-height:4px; padding:0;"></div>
+                <div class="item item-text-wrap" style="padding:0;">
+                  <!--span class="z-depth-1-half" style="width:16px; height:16px; border-radius:100%; display:block; background:#e98b39; position:absolute; left:48%; top:42px; z-index:100; opacity:0.5;">
+                    <span style="width:60%; height:60%; display:block; background:orangered; border-radius:100%; position:relative; top:20%; left:20%; z-index:101;"></span>
+                  </span-->
+                  <div map-lazy-load="https://maps.google.com/maps/api/js">
+                    <ng-map center="{{ShareData.dropoffLat}}, {{ShareData.dropoffLng}}" zoom="18" default-style="false" draggable="false" disable-double-click-zoom="true" scrollwheel="false" style="height:100px;">
+                      <custom-marker position="{{ShareData.dropoffLat}}, {{ShareData.dropoffLng}}">
+                        <img src="img/to-goal-marker.png" height="50px" style="margin:auto; display:block; position:relative; margin-bottom:-10px;">
+                      </custom-marker>
+                    </ng-map>
                   </div>
-                  <h2>荷物の配達先</h2>
-                  <p>{{ShareData.dropoff}}</p>
                 </div>
-                <div class="item item-body">
-                  <p>
-                    This is a "Facebook" styled Card. The header is created from a Thumbnail List item,
-                  </p>
-                  <p>
-                    <a href="#" class="subdued">1 Like</a>
-                    <a href="#" class="subdued">5 Comments</a>
-                  </p>
+              </div>
+              
+            </ion-slide>
+
+            <ion-slide>
+
+              <div class="card z-depth-1">
+                <div class="item item-text-wrap">
+                  <div class="list">
+                    <div class="item item-button-right">
+                      配送時間
+                      <button class="button button-clear button-positive">
+                        {{ShareData.time}}
+                      </button>
+                    </div>
+                    <div class="item item-button-right">
+                      距離
+                      <button class="button button-clear button-positive">
+                        {{ShareData.distance}}
+                      </button>
+                    </div>
+                    <div class="item item-button-right">
+                      料金
+                      <button class="button button-clear button-positive">
+                        {{ShareData.price}}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" ng-hide="detailUniqueCardData.data">
+                <div class="item item-text-wrap" align="center" style="background:steelblue; padding:0;">
+                  <button class="button button-clear button-light" ng-click="credit.show()">クレジットカードを登録</button>
+                </div>
+              </div>
+            　
+              <div class="card" ng-show="detailUniqueCardData.data" style="margin-top:-20px;">
+                <div class="item item-divider">
+                  このクレジットカードを使用
+                </div>
+                <div class="item item-text-wrap">
+                  {{detailUniqueCardData.data.creditNum | limitTo:9}}&nbsp;XXXX&nbsp;XXXX<br>
+                  {{detailUniqueCardData.data.creditName}}
+                </div>
+                <div class="item item-divider" align="right">
+                  <button class="button button-small button-clear button-positive" ng-click="credit.show()">確認</button>
                 </div>
               </div>
             </ion-slide>
 
             <ion-slide>
-              <button class="button button-block button-positive" ng-click="credit.show()" ng-hide="credit.check.length || creditStorageData" style="width:94%; margin-left:3%;">クレジットカードを入力</button>
 
-              <div class="card" ng-show="credit.check.length || creditStorageData">
-                <div class="item item-divider">
-                  このカードを使用します&nbsp;&nbsp;<span class="icon ion-ios-checkmark-outline" style="color:#27ae60;"></span>
+              <div class="card z-depth-1">
+                <div class="item item-divider" style="background:#fff;">
+                  宅配ルート
                 </div>
-                <div class="item item-text-wrap">
-                  {{credit.creditNumber | limitTo:9}}{{creditStorageData.creditNum | limitTo:9}}&nbsp;XXXX&nbsp;XXXX<br>
-                  {{credit.creditName}}{{creditStorageData.creditName}}&nbsp;&nbsp;XX年XX日<br>
-                </div>
-                <div class="item item-divider">
-                  <button class="button button-clear button-positive" ng-click="credit.show()" style="display:block; margin:auto;">クレジットカードを確認</button>
+                <div class="item item-text-wrap" style="padding:0;">
+                  <div map-lazy-load="https://maps.google.com/maps/api/js">
+                    <ng-map center="{{ShareData.pickupLat}}, {{ShareData.pickupLng}}" zoom="18" zoom-control="false" map-type-control="false" disable-double-click-zoom="true" draggable="false" scrollwheel="false" street-view-control="false">
+                      <directions
+                        draggable="false"
+                        travel-mode="DRIVING"
+                        suppress-markers="true"
+                        origin="{{ShareData.pickupLat}}, {{ShareData.pickupLng}}"
+                        destination="{{ShareData.dropoffLat}}, {{ShareData.dropoffLng}}">
+                      </directions>
+                      <custom-marker id="start"
+                        position="{{ShareData.pickupLat}}, {{ShareData.pickupLng}}">
+                        <img src="http://cargogo.jp/speedgogo/newspeedgogoIMG/to-start-marker.png" height="55px" style="margin-bottom:-10px;">
+                      </custom-marker>
+                      <custom-marker id="end"
+                        position="{{ShareData.dropoffLat}}, {{ShareData.dropoffLng}}">
+                        <img src="http://cargogo.jp/speedgogo/newspeedgogoIMG/to-goal-marker.png" height="55px" style="margin-bottom:-10px;">
+                      </custom-marker>
+                    </ng-map>
+                  </div>
                 </div>
               </div>
-
-              <div class="card">
-                <div class="item item-text-wrap">
-                  {{ShareData.price}}
-                </div>
-              </div>
-
-            </ion-slide>
-
-            <ion-slide>
-              {{ShareData}}
-              <pre>{{creditData|json}}</pre>
-              <pre>{{creditStorageData.data|json}}</pre>
+              
             </ion-slide>
 
           </ion-slide-box>      
@@ -274,8 +360,8 @@
       </ion-view>
     </script>
 
-    <script id="credit.html" type="text/ng-template">
-      <ion-modal-view ng-controller="creditCtrl">
+    <!--script id="credits.html" type="text/ng-template">
+      <ion-modal-view ng-controller="creditsCtrl">
         <ion-header-bar>
           <h1 class="title">クレジットカード情報</h1>
           <button class="button button-clear button-stable" ng-show="credit.check" ng-click="credit.hide()">Cancel</button>
@@ -327,6 +413,74 @@
           <button class="button button-block button-positive" style="margin-top:260px;" ng-show="credit.creditNumber.length && credit.creditName.length && credit.deadline && credit.cvv && !credit.check.length" ng-click="creditCheck(2)">このカードを使う</button>
         </ion-content>
       </ion-modal-view>
+    </script-->
+
+    <script id="credit.html" type="text/ng-template">
+      <ion-modal-view ng-controller="creditCtrl">
+        <ion-header-bar>
+          <h1 class="title">クレジットカード情報</h1>
+          <button class="button button-clear button-stable icon ion-ios-close-empty" ng-hide="credit.check" ng-click="creditHide()"></button>
+        </ion-header-bar>
+        <ion-content>
+          <div class="creditCards">
+            <div class="bank-name" title="BestBank">speedgogo</div>
+            <div class="chip">
+                <div class="side left"></div>
+                <div class="side right"></div>
+                <div class="vertical top"></div>
+                <div class="vertical bottom"></div>
+            </div>
+            <div class="data">
+                <div class="pan" title="4123 4567 8910 1112">
+                  <span ng-hide="credit.creditNum || uniqueCardData.data.creditNum">1234 5678 9012 3456</span>
+                  {{credit.creditNum}}{{uniqueCardData.data.creditNum}}
+                </div>
+                <div class="first-digits">
+                  <span ng-hide="credit.creditCVV || uniqueCardData.data.creditCVV">1234</span>
+                  {{credit.creditCVV}}{{uniqueCardData.data.creditCVV}}
+                </div>
+                <div class="exp-date-wrapper">
+                    <div class="left-label">EXPIRES END</div>
+                    <div class="exp-date">
+                        <div class="upper-labels">MONTH/YEAR</div>
+                        <div class="date" title="01/17">
+                          <span ng-hide="credit.creditLine || uniqueCardData.data.creditLine">01/31</span>
+                          {{credit.creditLine | date: "MM/yy"}}{{uniqueCardData.data.creditLine | date: "MM/yy"}}
+                        </div>
+                    </div>
+                </div>
+                <div class="name-on-card" title="John Doe">
+                  <span ng-hide="credit.creditName || uniqueCardData.data.creditName">TARO YAMAMOTO</span>
+                  {{credit.creditName}}{{uniqueCardData.data.creditName}}
+                </div>
+            </div>
+            <div class="lines-down"></div>
+            <div class="lines-up"></div>
+          </div>
+
+          <!-- model form -->
+          <div class="list list-inset" ng-hide="uniqueCardData.data" style="margin-top:40px;">
+            <label class="item item-input">
+              <input type="tel" pattern="[0-9 | ]*" id="creditNumValue" placeholder="クレジットカード番号" ng-model="credit.creditNum" ng-maxlength="19" maxlength="19">
+            </label>
+            <label class="item item-input">
+              <input type="text" pattern="^[0-9A-Za-z | ]+$" id="creditNameValue" placeholder="お名前" ng-model="credit.creditName" ng-maxlength="21" maxlength="21">
+            </label>
+            <label class="item item-input" style="width:50%; float:left;">
+              <input type="month" placeholder="MM/YY" ng-model="credit.creditLine">
+            </label>
+            <label class="item item-input" style="width:50%; float:left;">
+              <input type="text" pattern="[0-9]*" placeholder="CVV" ng-model="credit.creditCVV" ng-maxlength="4" maxlength="4">
+            </label>
+            <button class="button button-block button-positive" ng-show="credit.creditNum && credit.creditName && credit.creditLine && credit.creditCVV" ng-click="registration()">このカードを登録</button>
+          </div>
+
+          <div class="list list-inset" ng-show="uniqueCardData.data">
+            <button class="button button-block button-clear button-assertive" ng-click="deleteCredit()">このカードを削除</button>
+          </div>
+
+        </ion-content>
+      </ion-modal-view>
     </script>
 
     <script id="sendModal.html" type="text/ng-template">
@@ -338,7 +492,7 @@
         <ion-content>
           <div class="list card">
             <div class="item item-avatar">
-              <img src="mcfly.jpg">
+              <img src="">
               <h2>長浜佑樹&nbsp;様</h2>
               <p>{{nowTimeCheck}}</p>
             </div>
@@ -363,35 +517,68 @@
         <ion-header-bar>
           <button class="button button-clear button-stable" ng-click="mypage.hide()">Cancel</button>
           <h1 class="title">MyPage</h1>
-          <button class="button button-clear button-positive" ng-click="mypage.hide()">登録</button>
+          <button class="button button-clear button-positive" ng-click="myeditor.show()">編集</button>
         </ion-header-bar>
         <ion-content>
           <div class="list">
             <a class="item item-icon-left" href="#">
+              <i class="icon ion-mic-a"></i>
+              {{thisUniqueData.data.username}}
+              <span class="item-note">
+                Name
+              </span>
+            </a>
+            <a class="item item-icon-left" href="" ng-click="pageNations()">
               <i class="icon ion-email"></i>
               {{thisUniqueData.data.email}}
-            </a>
-            <a class="item item-icon-left item-icon-right" href="#">
-              <i class="icon ion-chatbubble-working"></i>
-              {{thisUniqueData.tel}}
-              <i class="icon ion-ios-telephone-outline"></i>
+              <span class="item-note">
+                Email
+              </span>
             </a>
             <a class="item item-icon-left" href="#">
-              <i class="icon ion-mic-a"></i>
-              {{thisUniqueData.name}}
+              <i class="icon ion-chatbubble-working"></i>
+              {{thisUniqueData.data.tel}}
               <span class="item-note">
-                Grammy
+                Tel
               </span>
             </a>
             <a class="item item-icon-left" href="#">
               <i class="icon ion-person-stalker"></i>
-              {{thisUniqueData.address}}
-              <span class="badge badge-assertive">0</span>
+              {{thisUniqueData.data.address_1}}
+              <span class="item-note">
+                Address
+              </span>
             </a>
           </div>
         </ion-content>
       </ion-modal-view>
     </script> 
+
+    <script id="myeditor.html" type="text/ng-template">
+      <ion-modal-view>
+        <ion-header-bar>
+          <h1 class="title">情報の編集</h1>
+          <button class="button button-clear icon ion-ios-close-empty" ng-click="myeditor.hide()"></button>
+        </ion-header-bar>
+        <ion-content padding="true">
+          <div class="list">
+            <label class="item item-input">
+              <span class="input-label">お名前</span>
+              <input type="text" id="editName">
+            </label>
+            <label class="item item-input">
+              <span class="input-label">電話番号</span>
+              <input type="text" id="editTel">
+            </label>
+            <label class="item item-input">
+              <span class="input-label">自宅の住所</span>
+              <input type="text" id="editAddress">
+            </label>
+            <button class="button button-block button-positive" ng-click="edit()">登録</button>
+          </div>
+        </ion-content>
+      </ion-modal-view>
+    </script>  
 
     <script id="slidebox.html" type="text/ng-template">
       <ion-modal-view ng-controller="slideboxCtrl">
@@ -437,8 +624,6 @@
 
     <ion-google-place placeholder="住所を入力" ng-model="location"/>
 
-
-  <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
 
   </body>
 

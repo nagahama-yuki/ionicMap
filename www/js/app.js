@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
+angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place','firebase','ngMap'])
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -81,14 +81,16 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
   $urlRouterProvider.otherwise("/");
 
 })
-.controller('mapCtrl', function ($scope, ShareData, $ionicModal, $ionicLoading, $cordovaProgress, $cordovaActionSheet, storageData, creditStorageData) {  
+.controller('mapCtrl', function ($scope, ShareData, $ionicModal, $ionicLoading, $cordovaProgress, $cordovaActionSheet, storageData, creditStorageData, $cordovaToast) {  
 
     //localStorage.clear();
     $scope.firstInit = function(){
         storageData.data = JSON.parse(localStorage.getItem('localData'));
         creditStorageData.data = JSON.parse(localStorage.getItem('localDataCredit'));
+        $scope.checkExplain = JSON.parse(localStorage.getItem('checkExplain'));
         console.log(creditStorageData.data);
         console.log(storageData.data);
+        console.log($scope.checkExplain);
         $scope.uniqueData = storageData;
     };
 
@@ -141,7 +143,10 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
                         pickupAddress = dataArray[0].formatted_address.replace(/(\d+)/g, "").replace("日本, ", "").replace("-", "").replace("〒", "").replace(" ", "");
                         document.getElementById("pickupInner").value = pickupAddress;
                         ShareData.pickup = pickupAddress;
+                        ShareData.pickupLat = centerLat;
+                        ShareData.pickupLng = centerLng;
                         pickupPosition = new plugin.google.maps.LatLng(centerLat, centerLng);
+                        $cordovaToast.showShortTop('集荷場所を登録しました。').then(function(success) {}, function (error) {});
                         ProgressIndicator.hide()
                     },
                     error: function(data){
@@ -188,6 +193,9 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
                         dropoffAddress = dataArray[0].formatted_address.replace(/(\d+)/g, "").replace("日本, ", "").replace("-", "").replace("〒", "").replace(" ", "");
                         document.getElementById("dropoffInner").value = dropoffAddress;
                         ShareData.dropoff = dropoffAddress;
+                        ShareData.dropoffLat = centerLats;
+                        ShareData.dropoffLng = centerLngs;
+                        $cordovaToast.showShortTop('配達場所を登録しました。').then(function(success) {}, function (error) {});
                         ProgressIndicator.hide()
                     },
                     error: function(data){
@@ -297,6 +305,10 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
         //map.off();
     };
 
+    $scope.exhide = function(){
+        $("#first-ex").fadeOut();
+    };
+
 
   $ionicModal.fromTemplateUrl('account.html', {
     scope: $scope,
@@ -347,38 +359,20 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
 
 
 })
-.controller("detailCtrl", function($scope, ShareData, $ionicModal, $ionicSlideBoxDelegate, $ionicHistory, $rootScope, storageData, creditStorageData){
+.controller("detailCtrl", function($scope, ShareData, $ionicModal, $ionicSlideBoxDelegate, $ionicHistory, $rootScope, storageData, creditStorageData, $firebaseArray, NgMap){
 
+    //ProgressIndicator.showDeterminateWithLabel(false, 10000, '計算しています...')
     $scope.ShareData = ShareData;
     $scope.detailUniqueData = storageData;
-    //$scope.creditStorageData = JSON.parse(localStorage.getItem('localDataCredit'));
-    $scope.creditData = creditStorageData;
-    $scope.mapInit = function(){
-        mapDrow(centerLat, centerLng);
-        //mapDrow(33.67812656,134.4601305);
+    $scope.detailUniqueCardData = creditStorageData;
+    var checkExplains = {
+      checkEX: "checked" 
     };
-
-    function mapDrow(lat, lng){
-        //var myMapStyles = [{"featureType":"all","elementType":"labels.text.fill","stylers":[{"saturation":36},{"color":"#000000"},{"lightness":40}]},{"featureType":"all","elementType":"labels.text.stroke","stylers":[{"visibility":"on"},{"color":"#000000"},{"lightness":16}]},{"featureType":"all","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":17},{"weight":1.2}]},{"featureType":"administrative","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"landscape","elementType":"geometry.fill","stylers":[{"lightness":"6"}]},{"featureType":"landscape","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":21}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":29},{"weight":0.2}]},{"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":18}]},{"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":16}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":19}]},{"featureType":"transit","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}];
-        var myMapStyles = [{"featureType":"administrative","elementType":"geometry","stylers":[{"visibility":"simplified"}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"saturation":"-21"}]},{"featureType":"administrative","elementType":"labels.text.fill","stylers":[{"color":"#444444"}]},{"featureType":"landscape","elementType":"all","stylers":[{"color":"#f2f2f2"}]},{"featureType":"landscape.man_made","elementType":"all","stylers":[{"visibility":"off"},{"hue":"#00b2ff"}]},{"featureType":"landscape.natural.landcover","elementType":"labels.text.fill","stylers":[{"saturation":"66"},{"hue":"#00ff78"}]},{"featureType":"landscape.natural.terrain","elementType":"labels.text.fill","stylers":[{"saturation":"26"},{"hue":"#00ff3f"}]},{"featureType":"poi","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"all","stylers":[{"saturation":-100},{"lightness":45}]},{"featureType":"road.highway","elementType":"all","stylers":[{"visibility":"simplified"}]},{"featureType":"road.arterial","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"transit","elementType":"all","stylers":[{"visibility":"off"}]},{"featureType":"water","elementType":"all","stylers":[{"color":"#28afe6"},{"visibility":"on"}]},{"featureType":"water","elementType":"geometry.fill","stylers":[{"hue":"#009bff"},{"visibility":"on"},{"saturation":"20"},{"lightness":"79"},{"weight":"4.72"}]}];
-        var pickuplatlng = new google.maps.LatLng(lat, lng);
-        var option = {
-            zoom : 15,
-            center : pickuplatlng,
-            mapTypeId : google.maps.MapTypeId.ROADMAP,
-            scrollwheel: false,
-            disableDoubleClickZoom: true,
-            draggable: false,
-            zoomControl: false,
-            mapTypeControl: false,
-            scaleControl: false,
-            streetViewControl: false,
-            rotateControl: false,
-            styles: myMapStyles
-        };
-        detailMaps = new google.maps.Map(document.getElementById("onMaps"), option);
-    }
-
+    localStorage.setItem('checkExplain', JSON.stringify(checkExplains));
+    //Angular Fire
+    var ref = new Firebase("https://fkhfaejfilejifencdjsjhfe.firebaseio.com");
+    $scope.firebase = $firebaseArray(ref);
+    
     $scope.slideNum = function(num){
         $ionicSlideBoxDelegate.slide(num);
         checkTab(num);
@@ -421,65 +415,126 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
     $("#googlePlaceCovers").fadeOut(0);
   });
 
+
     $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){
         if(toState.templateUrl == "detail.html"){
-            detailMaps.panTo(new google.maps.LatLng(34.6784656,135.4601305));
+            ProgressIndicator.showDeterminateWithLabel(false, 10000, '計算しています...')
         }
     });
 
 
 })
-.controller("creditCtrl", function($scope, creditStorageData){
+.controller("sendCtrl", function($scope, $cordovaActionSheet, ShareData, $ionicModal){
 
-    $scope.creditData = creditStorageData;
-
-    $scope.$watch('credit.creditNumber', function() {
-        var creditNumberValue = document.getElementById("creditNumber").value;
-        if(creditNumberValue.length == 4 || creditNumberValue.length == 9 || creditNumberValue.length == 14){
-            document.getElementById("creditNumber").value = creditNumberValue + " ";
-        } else if(creditNumberValue.length == 19){
-            document.getElementById("creditName").focus();
-        }
-    });
-
-    $scope.creditCheck = function(status){
-        $scope.credit.hide()
-        if(status == "1"){
-            $scope.credit.creditNumber = "";
-            $scope.credit.creditName = "";
-            $scope.credit.deadline = "";
-            $scope.credit.creditCVV = "";
-        } else if(status == "2"){
-            $scope.credit.check = "checked";
-            $scope.credit.creditNumber = "";
-            $scope.credit.creditName = "";
-            $scope.credit.deadline = "";
-            $scope.credit.creditCVV = "";
-            document.getElementById("creditNumber").value = "";
-            document.getElementById("creditName").value = "";
-            document.getElementById("deadline").value = "";
-            document.getElementById("creditCVV").value = "";
-            var localCreditDatas = {
-              creditNum: $scope.credit.creditNumber,
-              creditName: $scope.credit.creditName,
-              creditLine: $scope.credit.deadline,
-              creditCVV: $scope.credit.cvv
-            };
-            localStorage.setItem('localDataCredit', JSON.stringify(localCreditDatas));
-            $scope.firstInit();
-        }
+    var options = {
+        title: 'What do you want with this image?',
+        buttonLabels: ['この内容で送信'],
+        addCancelButtonWithLabel: 'Cancel',
+        androidEnableCancelButton : true,
+        winphoneEnableCancelButton : true
     };
 
-    $scope.reCredit = function(){
-        console.log("re");
+    $scope.sends = function(){
+
+        $cordovaActionSheet.show(options).then(function(btnIndex) {
+            if(btnIndex == 1){
+                $scope.firesend();
+                ProgressIndicator.showDeterminateWithLabel(true, 50000, '予約しています')
+            }
+        });
+        
+        $scope.firesend = function(){
+            $scope.firebase.$add({
+                from: {
+                from_name: "長浜",
+                from_address: ShareData.pickup,
+                from_lat: ShareData.pickupLat,
+                from_lng: ShareData.pickupLng
+                },
+                to: {
+                    to_name: "久野",
+                    to_address: ShareData.dropoff,
+                    to_lat: ShareData.dropoffLat,
+                    to_Lng: ShareData.dropoffLng
+                },
+                info: {
+                    distance: ShareData.distance,
+                    price: ShareData.price,
+                    time: ShareData.time,
+                    date: new Date().getTime(),
+                    date_real: new Date(new Date().getTime()).toLocaleString()
+                },
+                check: {
+                    flag: "one"
+                }
+            });
+            $scope.sendModal.show()
+        };
+
+    };
+
+  $ionicModal.fromTemplateUrl('sendModal.html', {
+    scope: $scope,
+    animation: 'slide-in-up'
+  }).then(function(modal) {
+    $scope.sendModal = modal;
+  });
+
+})
+.controller("creditCtrl", function($scope, storageData, creditStorageData){
+    
+    $scope.uniqueCardData = creditStorageData;
+
+    $scope.creditInit = function(){
+        storageData.data = JSON.parse(localStorage.getItem('localData'));
+        creditStorageData.data = JSON.parse(localStorage.getItem('localDataCredit'));
+        console.log(creditStorageData.data);
+        console.log(storageData.data);
+        //$scope.uniqueData = storageData;
+    };
+
+    $scope.registration = function(){
+        var localCreditDatas = {
+          creditNum: $scope.credit.creditNum,
+          creditName: $scope.credit.creditName,
+          creditLine: $scope.credit.creditLine,
+          creditCVV: $scope.credit.creditCVV
+        };
+        localStorage.setItem('localDataCredit', JSON.stringify(localCreditDatas));
+        $scope.credit.hide()
+        $scope.sessionCardData();
+        console.log("ローカルに格納");
+        $scope.creditInit();
     };
 
     $scope.deleteCredit = function(){
         localStorage.removeItem('localDataCredit');
+        $scope.credit.hide()
+        $scope.creditInit();
     };
 
+    $scope.sessionCardData = function(){
+        $scope.credit.creditNum = "";
+        $scope.credit.creditName = "";
+        $scope.credit.creditLine = "";
+        $scope.credit.creditCVV = "";
+    };
+
+    $scope.creditHide = function(){
+        $scope.credit.hide()
+        $scope.sessionCardData();
+    };
+
+    $scope.$watch('credit.creditNum', function() {
+        if($scope.credit.creditNum.length == 4 || $scope.credit.creditNum.length == 9 || $scope.credit.creditNum.length == 14){
+            $scope.credit.creditNum = $scope.credit.creditNum + " ";
+        } else if ($scope.credit.creditNum.length == 19){
+            document.getElementById("creditNameValue").focus();
+        }
+    });
+
 })
-.controller('accountCtrl', function($scope, ShareData, $ionicModal, storageData){
+.controller('accountCtrl', function($scope, ShareData, $ionicModal, storageData, $cordovaToast){
 
     $scope.checkId = function(){
         var uniqueId = document.getElementById("uniqueId").value;
@@ -552,6 +607,7 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
                     $scope.account.hide();
                     $scope.mypage.show();
                     $scope.firstInit();
+                    $cordovaToast.showShortTop('アカウントを作成しました。' + responce.email + 'さんこんにちは。').then(function(success) {}, function (error) {});                
                 },
                 error: function(responce){
                     console.log("error");
@@ -560,8 +616,11 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
         };
     };
 })
-.controller("loginCtrl", function($scope){
-    $scope.login = function(){
+.controller("loginCtrl", function($scope, $cordovaToast){
+
+    $scope.logins = function(){
+        var loginEmail = document.getElementById("logID").value;
+        var loginPass = document.getElementById("logPass").value;
         $.ajax({
             url: "http://160.16.206.129:3000/sessions.json",
             type: 'POST',
@@ -570,27 +629,96 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
             },
             dataType: 'json',
             data: {
-                email: "yuuki4104453@yahoo.co.jps",
-                password: "yms8413555"
+                email: loginEmail,
+                password: loginPass
             },
             success: function(responce){
                 console.log(responce);
                 var localDatas = {
-                  email: responce.email
+                  email: responce.email,
+                  id: responce.id
                 };
                 localStorage.setItem('localData', JSON.stringify(localDatas));
+                $scope.login.hide();
                 $scope.firstInit();
+                $cordovaToast.showShortTop('ログインしました。').then(function(success) {}, function (error) {});
             },
             error: function(responce){
                 console.log("error");
             }
         });
     };
+
 })
-.controller("mypageCtrl", function($scope, storageData){
+.controller("mypageCtrl", function($scope, $ionicModal, ShareData, storageData, $ionicPopup, $timeout){
 
     $scope.thisUniqueData = storageData;
 
+  $ionicModal.fromTemplateUrl('myeditor.html', {
+    scope: $scope,
+    animation: 'slide-in-up'
+  }).then(function(modal) {
+    $scope.myeditor = modal;
+  });
+
+    $scope.edit = function(){
+        var editName = document.getElementById("editName").value;
+        var editTel = document.getElementById("editTel").value;
+        var editAddress = document.getElementById("editAddress").value;
+        if(editName == "" && editTel == "" && editAddress == ""){
+            // An alert dialog
+                var alertPopup = $ionicPopup.alert({
+                    title: 'Attention!',
+                    template: '空欄があります。'
+                });
+        } else {
+            var confirmPopup = $ionicPopup.confirm({
+             title: 'Are you OK?',
+             template: 'この内容で送信しますか?'
+            });
+
+            confirmPopup.then(function(res) {
+                if(res) {
+                    $scope.ajaxEditor();
+                } else {}
+            });
+
+            $scope.ajaxEditor = function(){
+                $.ajax({
+                    url: "http://160.16.206.129:3000/users/" + storageData.data.id + ".json",
+                    type: 'PUT',
+                    headers: {
+                        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    dataType: 'json',
+                    data: {
+                        user: {
+                            username: editName,
+                            tel: editTel,
+                            address_1: editAddress
+                        }
+                    },
+                    success: function(responce){
+                        console.log("success");
+                        var localDatas = {
+                          email: storageData.data.email,
+                          id: storageData.data.id,
+                          username: editName,
+                          tel: editTel,
+                          address_1: editAddress
+                        };
+                        localStorage.setItem('localData', JSON.stringify(localDatas));
+                        $scope.firstInit();
+                        $scope.myeditor.hide();
+                    },
+                    error: function(responce){
+                        console.log("error");
+                    }
+                });
+            };
+        }
+    };
+    
 })
 .controller("slideboxCtrl", function($scope, $ionicSlideBoxDelegate){
     $scope.next = function(){
@@ -602,35 +730,33 @@ angular.module('starter', ['ionic','ngCordova','firebase','ion-google-place'])
     };
 
 })
-.controller("logoutCtrl", function($scope){
+.controller("logoutCtrl", function($scope, $ionicPopup, $cordovaToast){
+    
     $scope.logout = function(){
-        $.ajax({
-            url: "http://160.16.206.129:3000/sessions.json",
-            type: 'DELETE',
-            headers: {
-            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            dataType: 'json',
-            data: {
-                email: "yuuki4104453@yahoo.co.jps",
-                password: "yms8413555"
-            },
-            success: function(responce){
-                console.log("success");
-                $scope.login.show()
-            }
-            //error: function(responce){
-            //    console.log("error");
-                //localStorage.clear();
-                //$scope.firstInit();
-            //    $("#side-menu").animate({
-            //        left: "-70%"
-            //    },300);
-            //    $("#modal-cover").fadeOut(100);
-            //}
-        });
+
+        $scope.showConfirm = function() {
+            var confirmPopup = $ionicPopup.confirm({
+                title: '本当にログアウトしますか?'
+            });
+            confirmPopup.then(function(res) {
+                if(res) {
+                    localStorage.clear();
+                    $scope.firstInit();
+                    $("#side-menu").animate({
+                        left: "-70%"
+                    },300);
+                    $("#modal-cover").fadeOut(100);
+                    $("#first-ex").css("display", "none");
+                    $cordovaToast.showShortTop('ログアウトしました。').then(function(success) {}, function (error) {});
+                } else {
+                    console.log('You are not sure');
+                }
+            });
+        };
+        $scope.showConfirm();
+
     };
+
 })
 ;
-
 
